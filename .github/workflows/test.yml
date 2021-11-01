@@ -2,7 +2,7 @@ name: test
 on: [push, pull_request]
 
 jobs:
-  bucklescript:
+  rescript:
     strategy:
       matrix:
         os:
@@ -19,3 +19,34 @@ jobs:
       env:
         DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
       run: bash ./test/ci/travis-binaries.sh
+
+  opam:
+    strategy:
+      matrix:
+        os:
+        - ubuntu-latest
+        ocaml:
+        - 4.13.1
+        - 4.12.1
+        - 4.11.2
+        - 4.10.2
+        - 4.09.1
+        - 4.08.1
+        - 4.07.1
+        - 4.06.1
+        - 4.05.0
+        - 4.04.2
+        include:
+        - os: macos-latest
+          ocaml: 4.13.1
+
+    runs-on: ${{matrix.os}}
+    steps:
+    - uses: actions/checkout@v2
+    - uses: avsm/setup-ocaml@v2
+      with:
+        ocaml-compiler: ${{ matrix.ocaml }}
+    - run: opam install --deps-only --yes .
+
+    - run: opam exec -- make build
+    - run: opam exec -- make test
